@@ -1,0 +1,32 @@
+\documentclass[../SMLreport_template.tex]{subfiles}
+ 
+\begin{document}
+\subsection{Introduction}
+As discussed in the Section \ref{sec:bias-variance}, the bias-variance trade-off represents one of the major challenges of designing an effective statistical machine learning algorithm that is capable of accurately generalising to previously unseen inputs. Ensemble Learning methods attempt to address this challenge by combining the predictions of a number of ‘weak’ models in an attempt to create a ‘strong’ model with improved predictive performance. ‘Weak’ models can be described as less complex statistical models that underfit to the training dataset, resulting in poor predictions and high bias. This simplicity however makes ‘weak’ models less sensitive to the sampling noise present in finite training datasets, resulting in a low variance. Therefore, a ‘weak’ model can be described as having a high bias but low variance. \par\noindent
+The two main ensemble learning approaches are called Bagging and Boosting. Bagging algorithms train a set of homogeneous ‘weak’ learners independently and combine these models using some kind of deterministic averaging process. This results in a ‘strong’ learner with a reduced variance when compared to its component models.  On the other hand, Boosting algorithms train a set of homogeneous ‘weak’ learners sequentially, with more importance given to data points that were handled poorly by previous models in the sequence. This results in a ‘strong’ learner with a reduced bias when compared to its component models.
+
+\subsection{Bias-Variance Decomposition for Ensemble Learning}
+The intuition behind Ensemble learning is that combining a number of high bias, low variance model will result in a combined model that has low bias and low variance leading to an overall model with improved predictive power that is capable of accurately generalising to previously unseen data. In this section we will justify this intuition by deriving the bias-variance decomposition applied to regression and applying this decomposition to an ensemble model. The ideas and concepts explored in this section can be extended to classification tasks, however the mathematics of the bias-variance decomposition applied to classification is significantly more involved and beyond the scope of this report. The bias-variance decomposition applied to classification is explored in [ref1][ref2].
+
+Let us consider a dataset \(\textbf{\textit{X}}_\mathbb{L} = \{(y_i, \textbf{\textit{X}}_i), i = 1, ..., N\}\) and that the true model is generated from a noisy model \(y = f(\textbf{\textit{x}}) + \epsilon\), where the noise \(\epsilon\) has a normally distribution with mean zero and standard deviation, \(\sigma\).
+
+The true model is estimated using a statistical model, \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) that is trained on the dataset \(\textbf{\textit{X}}_\mathbb{L}\) by minimizing the square error cost function as shown in Equation \ref{sq_err}. 
+
+\begin{equation} \label{sq_err}
+square\, error = \sum_{i=1}^{N}(y_i - \hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2
+\end{equation}
+
+Since \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) is a point estimate of the true model, the resulting estimator is dependent on the training dataset. Therefore, training a statistical model on a range of training datasets of the same size, sampled from the same underlying distribution will results in a range of different point estimators\(\hat{g}_\mathbb{L}_j(\textbf{\textit{x}})\) due to the stochasticity within the training sets. As a consequence of this the estimator \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) can be treated as a random variable. This allows us to define an expectation value for the square error as show in Equation \ref{bias_variance_decomp}
+
+\begin{equation} \label{bias_variance_decomp}
+\begin{split}
+    \mathbb{E}[\sum_{i}(y_i-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2] &= \mathbb{E}[\sum_{i}(y_i-f(\textbf{\textit{x}}_i)+f(\textbf{\textit{x}}_i)-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2]\\
+    &= \sum_{i}\{\mathbb{E}[(y_i - f(\textbf{\textit{x}}_i))^2] + \mathbb{E}[(f(\textbf{\textit{x}}_i)-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2] + 2\mathbb{E}[y_i - f(\textbf{\textit{x}}_i)]\mathbb{E}[f(\textbf{\textit{x}}_i)-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)] \}\\
+    &= \sum_{i}\{\mathbb{E}[(f(\textbf{\textit{x}}_i)-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2] + \sigma_\epsilon^2 \\
+    &=\sum_{i}\{\mathbb{E}[(f(\textbf{\textit{x}}_i)- \mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)] + \mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)]-\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2]\} + \sigma_\epsilon^2 \\
+    &=\sum_{i}\{(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)])^2 + \mathbb{E}[\{\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)]\}^2]\} + \sigma_\epsilon^2 \\
+    &= Bias^2 + Var + Noise
+\end{split}
+\end{equation}
+
+\end{document}
