@@ -3,7 +3,23 @@
 \begin{document}
 \subsection{Introduction}
 As discussed in the Section \ref{sec:bias-variance}, the bias-variance trade-off represents one of the major challenges of designing an effective statistical machine learning algorithm that is capable of accurately generalising to previously unseen inputs. Ensemble Learning methods attempt to address this challenge by combining the predictions of a number of ‘weak’ models in an attempt to create a ‘strong’ model with improved predictive performance. ‘Weak’ models can be described as less complex statistical models that underfit to the training dataset, resulting in poor predictions and high bias. This simplicity however makes ‘weak’ models less sensitive to the sampling noise present in finite training datasets, resulting in a low variance. Therefore, a ‘weak’ model can be described as having a high bias but low variance. \par\noindent
-The two main ensemble learning approaches are called Bagging and Boosting. Bagging algorithms train a set of homogeneous ‘weak’ learners independently and combine these models using some kind of deterministic averaging process. This results in a ‘strong’ learner with a reduced variance when compared to its component models.  On the other hand, Boosting algorithms train a set of homogeneous ‘weak’ learners sequentially, with more importance given to data points that were handled poorly by previous models in the sequence. This results in a ‘strong’ learner with a reduced bias when compared to its component models.
+
+Dietterich et al. (2000) and Loupee (2014) suggest that Ensemble Learning methods are so successful in practical applications as they address three distinct practical issues, statistical, computational and representational, that hinder the performance of other more conventional machine learning approaches.
+
+\begin{enumerate}
+  \item Statistical Issues: When presented with a limited training dataset, a machine learning algorithm can generate several estimators that give the same performance on the training dataset. Therefore, aggregating these models into an ensemble will reduce the variance inherent in the individual estimators resulting in a better fitting model overall.
+  
+  \item Computational Issues: One of the major practical shortcomings of machine learning techniques is the optimisation of the estimator parameters when finding the minimum training error. Due to the limitations of optimisation algorithms, a learning algorithm might get stuck in a local optima, stalling learning and resulting in a poor estimator. Therefore, combining a number of individual models with different optimisation starting points will result in an aggregated ensemble predictor that is better at approximating the true model than an individual model.
+  
+  \item Representational Issues: In practice training datasets are finite. Hence, in some cases no single estimator can accurately represent the true model. However, combining several models into an ensemble might result in an expanded representation space and an aggregated ensemble predictor that better approximates the true model.
+\end{enumerate}
+
+The two main ensemble learning approaches applied in practical settings are called Bagging and Boosting:
+\begin{itemize}
+    \item Bagging algorithms train a set of homogeneous ‘weak’ learners independently and combine these models using some kind of deterministic averaging process. This results in a ‘strong’ learner with a reduced variance when compared to its component models. 
+    
+    \item Boosting algorithms train a set of homogeneous ‘weak’ learners sequentially, with more importance given to data points that were handled poorly by previous models in the sequence. This results in a ‘strong’ learner with a reduced bias when compared to its component models.
+\end{itemize}
 
 \subsection{Bias-Variance Decomposition for Ensemble Learning}
 The intuition behind Ensemble learning is that combining a number of high bias, low variance model will result in a combined model that has low bias and low variance leading to an overall model with improved predictive power that is capable of accurately generalising to previously unseen data. In this section we will justify this intuition by deriving the bias-variance decomposition applied to regression and extending this decomposition to an ensemble model. The ideas and concepts explored in this section can be extended to classification tasks, however the mathematics of the bias-variance decomposition applied to classification is significantly more involved and beyond the scope of this report. The bias-variance decomposition applied to classification is explored in (P. Domingos et al. 2000)(BORGNE, Y.L. 2005). The bellow derivations are based on the work found in (Mehta et al. 2019).
@@ -52,24 +68,27 @@ Where \(\theta_m\) represents the unique parameters of the individual estimators
 Substituting the aggregated ensemble predictor into Equations \ref{bias_2} and \ref{var_2} results in Equations \ref{bias_ens} and \ref{var_ens}.
 
 \begin{equation}\label{bias_ens}
-    Bias^2 = \sum_{i}\{(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2\}
+    Bias^2 = \sum_{i}(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2
 \end{equation}
 
 \begin{equation}\label{var_ens}
-    Var = \sum_{i}\{\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2]]\}
+    Var = \sum_{i}\{\mathbb{E}[(\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2]\}
 \end{equation}
 
 Since the aggregated ensemble predictor is a sum of estimators, the variance of the Ensemble Learning model can be decomposed in terms of the correlation between the individual estimators that make up the ensemble as shown in Equation \ref{var_decomp}.
 
 \begin{equation}\label{var_decomp}
 \begin{split}
-    Var &= \sum_{i}\{\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2]]\}\\
-    &=\dfrac{1}{M^2}\left(\sum_{m, m\textsc{\char13}}\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m\textsc{\char13})] - M^2\sum_{i}\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)]^2\right)\\
+    Var &= \sum_{i}\mathbb{E}\left[(\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2\right]\\
+    &= \sum_{i}\left(\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)^2] - \mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)]^2 \right)\\
+     &= \sum_{i}\left(\mathbb{E}\left[\frac{1}{M^2}\sum_{m=1}^{M}\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)^2\right] - \mathbb{E}\left[\frac{1}{M}\sum_{m=1}^{M}\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)\right]^2 \right)\\
+     &= \sum_{i}\left(\frac{1}{M^2}\sum_{m=1}^{M}\mathbb{E}\left[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)^2\right] - \mu(\textbf{\textit{x}}_i)^2 \right)\\
+    &=\dfrac{1}{M^2}\left(\sum_{i} \sum_{m, m\textsc{\char13}}\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m\textsc{\char13})] - M^2\sum_{i}\mu(\textbf{\textit{x}}_i)^2\right)\\
     &= \rho(\textbf{\textit{x}})\sigma^2_\mathbb{L}_, _\theta_m + \dfrac{1-\rho(\textbf{\textit{x}})}{M}\sigma^2_\mathbb{L}_, _\theta_m
 \end{split}
 \end{equation}
 
-Where the variance of the single estimator, \(\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta_m)\)  can be defined as shown in Equation \ref{var_agg} and co-variance of two unique estimators can be defined as shown in Equation \ref{cov}. 
+Where the variance of the single estimator, \(\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta_m)\)  can be defined as shown in Equation \ref{var_agg} and co-variance of two unique estimators, \(m\) and \(m'\) can be defined as shown in Equation \ref{cov}. 
 
 \begin{equation}\label{var_agg}
     \sigma^2_\mathbb{L}_, _\theta_m (\textbf{\textit{x}}) = \mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)^2]-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}, \theta)]^2
@@ -85,6 +104,16 @@ Therefore, the normalised correlation coefficient of a single estimator can be d
     \rho(\textbf{\textit{x}}) = \frac{Cov_\mathbb{L}_, _\theta_m (\textbf{\textit{x}})}{\sigma^2_\mathbb{L}_, _\theta_m (\textbf{\textit{x}})}
 \end{equation}
 
+The intuition behind Ensemble Learners is represented mathematically by Equation \ref{var_decomp}. As the number of estimators in the ensemble increases, \((M -> \infty)\), the variance of the aggregated ensemble predictor decreases resulting in an estimator that is less likely to overfit. Moreover, Equation \ref{var_decomp} indicates that the aggregated ensemble predictor has a minimum variance when the component estimators of the ensemble are uncorrelated, \(\rho(\textbf{\textit{x}})=0\). 
 
+One concern with Ensemble learning is that aggregating a large number of point estimators will compound the biases of the individual estimators resulting in a highly biased aggregated ensemble predictor. This can be disproven mathematically as shown in Equation \ref{bias_agg}, as the bias of the aggregated predictor is identical to the the expected bias of a single estimator.
+
+\begin{equation}\label{bias_agg}
+\begin{split}
+    Bias^2 &= \sum_{i}(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2\\
+    &=\sum_{i}\left(f(\textbf{\textit{x}}_i)-\mathbb{E}\left[\frac{1}{M}\sum_{m=1}^{M}\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)\right] \right)^2\\
+    &=\sum_{i}\left(f(\textbf{\textit{x}}_i)-\mu(\textbf{\textit{x}}_i)\right)^2\\
+\end{split}
+\end{equation}
 
 \end{document}
