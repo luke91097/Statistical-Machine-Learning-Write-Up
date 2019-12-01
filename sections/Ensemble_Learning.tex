@@ -6,8 +6,9 @@ As discussed in the Section \ref{sec:bias-variance}, the bias-variance trade-off
 The two main ensemble learning approaches are called Bagging and Boosting. Bagging algorithms train a set of homogeneous ‘weak’ learners independently and combine these models using some kind of deterministic averaging process. This results in a ‘strong’ learner with a reduced variance when compared to its component models.  On the other hand, Boosting algorithms train a set of homogeneous ‘weak’ learners sequentially, with more importance given to data points that were handled poorly by previous models in the sequence. This results in a ‘strong’ learner with a reduced bias when compared to its component models.
 
 \subsection{Bias-Variance Decomposition for Ensemble Learning}
-The intuition behind Ensemble learning is that combining a number of high bias, low variance model will result in a combined model that has low bias and low variance leading to an overall model with improved predictive power that is capable of accurately generalising to previously unseen data. In this section we will justify this intuition by deriving the bias-variance decomposition applied to regression and applying this decomposition to an ensemble model. The ideas and concepts explored in this section can be extended to classification tasks, however the mathematics of the bias-variance decomposition applied to classification is significantly more involved and beyond the scope of this report. The bias-variance decomposition applied to classification is explored in [ref1][ref2].
+The intuition behind Ensemble learning is that combining a number of high bias, low variance model will result in a combined model that has low bias and low variance leading to an overall model with improved predictive power that is capable of accurately generalising to previously unseen data. In this section we will justify this intuition by deriving the bias-variance decomposition applied to regression and extending this decomposition to an ensemble model. The ideas and concepts explored in this section can be extended to classification tasks, however the mathematics of the bias-variance decomposition applied to classification is significantly more involved and beyond the scope of this report. The bias-variance decomposition applied to classification is explored in (P. Domingos et al. 2000)(BORGNE, Y.L. 2005). The bellow derivations are based on the work found in (Mehta et al. 2019).
 
+\subsection{Bias-Variance Decomposition for Square Error Regression}
 Let us consider a dataset \(\textbf{\textit{X}}_\mathbb{L} = \{(y_i, \textbf{\textit{X}}_i), i = 1, ..., N\}\) and that the true model is generated from a noisy model \(y = f(\textbf{\textit{x}}) + \epsilon\), where the noise \(\epsilon\) has a normally distribution with mean zero and standard deviation, \(\sigma\).
 
 The true model is estimated using a statistical model, \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) that is trained on the dataset \(\textbf{\textit{X}}_\mathbb{L}\) by minimizing the square error cost function as shown in Equation \ref{sq_err}. 
@@ -16,7 +17,7 @@ The true model is estimated using a statistical model, \(\hat{g}_\mathbb{L}(\tex
 square\, error = \sum_{i=1}^{N}(y_i - \hat{g}_\mathbb{L}(\textbf{\textit{x}}_i))^2
 \end{equation}
 
-Since \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) is a point estimate of the true model, the resulting estimator is dependent on the training dataset. Therefore, training a statistical model on a range of training datasets of the same size, sampled from the same underlying distribution will results in a range of different point estimators\(\hat{g}_\mathbb{L}_j(\textbf{\textit{x}})\) due to the stochasticity within the training sets. As a consequence of this the estimator \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) can be treated as a random variable. This allows us to define an expectation value for the square error as show in Equation \ref{bias_variance_decomp}
+Since \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) is a point estimate of the true model, the resulting estimator is dependent on the training dataset. Therefore, training a statistical model on a range of training datasets of the same size, sampled from the same underlying distribution will results in a range of different point estimators \(\hat{g}_\mathbb{L}_j(\textbf{\textit{x}})\) due to the stochasticity within the training sets. As a consequence of this the estimator \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) can be treated as a random variable. This allows us to define an expectation value for the square error as show in Equation \ref{bias_variance_decomp}
 
 \begin{equation} \label{bias_variance_decomp}
 \begin{split}
@@ -28,5 +29,62 @@ Since \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) is a point estimate of the tru
     &= Bias^2 + Var + Noise
 \end{split}
 \end{equation}
+
+Therefore, as discussed in Section \ref{sec:bias-variance}, the error of the machine learning model,  \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\) can be broken down into three distinct  components, the bias as shown in Equation \ref{bias_2}, the variance as shown in Equation \ref{var_2} and the irreducible noise.   
+
+\begin{equation} \label{bias_2}
+Bias^2 = \sum_{i}\{(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)])^2\}
+\end{equation}
+
+\begin{equation} \label{var_2}
+Var = \sum_{i}\{\mathbb{E}[(\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i)])^2]\}
+\end{equation}
+
+\subsection{Extending the Bias-Variance Decomposition to Ensemble Learning}
+In order to extend the bias-variance derivation to Ensemble Learning models we must treat the Ensemble learning predictor as a combination of various individual point estimators, \(\hat{g}_\mathbb{L}(\textbf{\textit{x}})\). Therefore, given a dataset, \(\textbf{\textit{X}}_\mathbb{L}\), and machine learning algorithm, \(\mathbb{A}\) an set of individual and unique estimators are generated. The difference between the individual estimators is due to the stochastic nature of learning algorithms and the sampling noise introduced when generating the training dataset, \(\mathbb{L}\). Therefore, each model generated will give a slightly different prediction, \(\hat{y}\). In terms of Ensemble learning we are concerned with the aggregated ensemble predictor shown in Equation \ref{ensemble_pred}.
+
+\begin{equation}\label{ensemble_pred}
+    \hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta) = \frac{1}{M}\sum_{m=1}^{M}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}_i, \theta_m)]
+\end{equation}
+
+Where \(\theta_m\) represents the unique parameters of the individual estimators that results from the stochastic learning algorithm, \(\mathbb{A}\).
+
+Substituting the aggregated ensemble predictor into Equations \ref{bias_2} and \ref{var_2} results in Equations \ref{bias_ens} and \ref{var_ens}.
+
+\begin{equation}\label{bias_ens}
+    Bias^2 = \sum_{i}\{(f(\textbf{\textit{x}}_i)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2\}
+\end{equation}
+
+\begin{equation}\label{var_ens}
+    Var = \sum_{i}\{\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2]]\}
+\end{equation}
+
+Since the aggregated ensemble predictor is a sum of estimators, the variance of the Ensemble Learning model can be decomposed in terms of the correlation between the individual estimators that make up the ensemble as shown in Equation \ref{var_decomp}.
+
+\begin{equation}\label{var_decomp}
+\begin{split}
+    Var &= \sum_{i}\{\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)])^2]]\}\\
+    &=\dfrac{1}{M^2}\left(\sum_{m, m\textsc{\char13}}\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m\textsc{\char13})] - M^2\sum_{i}\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta)]^2\right)\\
+    &= \rho(\textbf{\textit{x}})\sigma^2_\mathbb{L}_, _\theta_m + \dfrac{1-\rho(\textbf{\textit{x}})}{M}\sigma^2_\mathbb{L}_, _\theta_m
+\end{split}
+\end{equation}
+
+Where the variance of the single estimator, \(\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}_i, \theta_m)\)  can be defined as shown in Equation \ref{var_agg} and co-variance of two unique estimators can be defined as shown in Equation \ref{cov}. 
+
+\begin{equation}\label{var_agg}
+    \sigma^2_\mathbb{L}_, _\theta_m (\textbf{\textit{x}}) = \mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)^2]-\mathbb{E}[\hat{g}_\mathbb{L}^\mathbb{A}(\textbf{\textit{x}}, \theta)]^2
+\end{equation}
+
+\begin{equation}\label{cov}
+    Cov_\mathbb{L}_, _\theta_m (\textbf{\textit{x}}) = \mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m\textsc{\char13})]-\mathbb{E}[\hat{g}_\mathbb{L}(\textbf{\textit{x}}, \theta_m)]^2
+\end{equation}
+
+Therefore, the normalised correlation coefficient of a single estimator can be defined as shown in equation \ref{cor}.
+
+\begin{equation}\label{cor}
+    \rho(\textbf{\textit{x}}) = \frac{Cov_\mathbb{L}_, _\theta_m (\textbf{\textit{x}})}{\sigma^2_\mathbb{L}_, _\theta_m (\textbf{\textit{x}})}
+\end{equation}
+
+
 
 \end{document}
